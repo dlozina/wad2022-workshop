@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Path
-from pydantic import BaseModel
+from fastapi import FastAPI
 
 import databases
 import sqlalchemy
 import short_url
+
+from models.url_model import UrlIn
 
 BASE_URL = "http://localhost:8000/"
 # SQLAlchemy specific code, as with any other app
@@ -25,17 +26,6 @@ engine = sqlalchemy.create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}
 )
 metadata.create_all(engine)
-
-
-class UrlIn(BaseModel):
-    url: str
-
-
-class Url(BaseModel):
-    id: int
-    url: str
-    short_url: str
-
 
 app = FastAPI()
 
