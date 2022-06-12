@@ -3,7 +3,9 @@ from pydantic import BaseModel
 
 import databases
 import sqlalchemy
+import short_url
 
+BASE_URL = "http://localhost:8000/"
 # SQLAlchemy specific code, as with any other app
 DATABASE_URL = "sqlite:///./test.db"
 # DATABASE_URL = "postgresql://user:password@postgresserver/db"
@@ -13,7 +15,7 @@ database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()
 
 url_database = sqlalchemy.Table(
-    "url_database",
+    "url_database_2",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("url", sqlalchemy.String),
@@ -32,6 +34,7 @@ class UrlIn(BaseModel):
 class Url(BaseModel):
     id: int
     url: str
+    short_url: str
 
 
 app = FastAPI()
@@ -47,21 +50,18 @@ async def shutdown():
     await database.disconnect()
 
 
-@app.post("/shorten", response_model=Url)
+@app.post("/shorten")
 async def shorten(url_parameter: UrlIn):
-    query = url_database.insert().values(url=url_parameter.url)
+    query = url_database.insert().values(
+        url=url_parameter.url,
+    )
     last_record_id = await database.execute(query)
-    return {**url_parameter.dict(), "id": last_record_id}
+    shorted_url = short_url.encode_url(last_record_id)
+    return {"id": last_record_id, "shortUrl": BASE_URL + shorted_url}
 
 
-@app.get("/{short_url}")
-async def short_url(
-    short_url: str = Path(title="Short URL Link"),
-):
-    results = {"short_url": short_url}
-    return results
+@app.get("/{url_part}")
+async def redirect_to_url(url_part):
+    query = url_database.select().where(url_database.c.id == 14)
+    return await database.fetch_all(query)
 
-
-@app.post("/add-target-url")
-async def shorten(url: Url):
-    return url
