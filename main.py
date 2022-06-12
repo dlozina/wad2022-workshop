@@ -61,7 +61,8 @@ async def shorten(url_parameter: UrlIn):
 
 
 @app.get("/{url_part}")
-async def redirect_to_url(url_part):
-    query = url_database.select().where(url_database.c.id == 14)
+async def redirect_to_url(url_part: str):
+    db_id = short_url.decode_url(url_part)
+    query = url_database.select().where(url_database.c.id == db_id)
     return await database.fetch_all(query)
 
