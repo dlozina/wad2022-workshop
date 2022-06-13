@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import FastAPI
 
 import databases
@@ -6,7 +8,7 @@ import short_url
 from fastapi.responses import RedirectResponse
 
 from models.url import UrlIn
-from models.target_url import TargetUrlIn
+from models.target_url import TargetUrlIn, TargetUrl
 
 BASE_URL = "http://localhost:8000/"
 # SQLAlchemy specific code, as with any other app
@@ -17,15 +19,15 @@ database = databases.Database(DATABASE_URL)
 
 metadata = sqlalchemy.MetaData()
 
-url_database = sqlalchemy.Table(
-    "url_database",
+url_table = sqlalchemy.Table(
+    "url_table",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("url", sqlalchemy.String),
 )
 
-target_url_database = sqlalchemy.Table(
-    "target_url_database",
+target_url_table = sqlalchemy.Table(
+    "target_url_table",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("url", sqlalchemy.String),
@@ -57,9 +59,15 @@ async def hi_attendees():
     return {"message": "Welcome to or workshop!"}
 
 
+@app.get("/get-all-target-urls")
+async def get_all_target_urls():
+    query = target_url_table.select()
+    return await database.fetch_all(query)
+
+
 @app.post("/shorten")
 async def shorten(url_parameter: UrlIn):
-    query = url_database.insert().values(
+    query = url_table.insert().values(
         url=url_parameter.url,
     )
     last_record_id = await database.execute(query)
@@ -70,7 +78,7 @@ async def shorten(url_parameter: UrlIn):
 @app.get("/{url_part}")
 async def redirect_to_url(url_part: str):
     db_id = short_url.decode_url(url_part)
-    query = url_database.select().where(url_database.c.id == db_id)
+    query = url_table.select().where(url_table.c.id == db_id)
     dbEntityList = await database.fetch_all(query)
     for dbEntity in dbEntityList:
         result = dbEntity['url']
@@ -78,8 +86,8 @@ async def redirect_to_url(url_part: str):
 
 
 @app.post("/add-target-url")
-async def shorten(url_parameter: TargetUrlIn):
-    query = url_database.insert().values(
+async def add_target_url(url_parameter: TargetUrlIn):
+    query = target_url_table.insert().values(
         url=url_parameter.url,
         send_sms=url_parameter.send_sms,
         send_whatsapp=url_parameter.send_whatsapp,
