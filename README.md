@@ -5,8 +5,24 @@
 - Python 3.6+ <br>
 - Installed [virtual env](https://pypi.org/project/virtualenv/)
 
-## 🚀 Agenda
+## ✅ Checks
+First you need to know what version of python are you using:
+
+```bash     
+python --version
+```
+```bash
+which python  
+```
+```bash
+which pip
+```
+
+## 📡  Agenda
 Enable app to use various communication channels such as:
 - [SMS Reference](https://www.infobip.com/docs/api#channels/sms)
 - [Whatsapp Reference](https://www.infobip.com/docs/api#channels/whatsapp)
 - [Email Reference](https://www.infobip.com/docs/api#channels/email)
+
+## 🚀 Jump start
+- pip install -r requirements/dev.txt
