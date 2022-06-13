@@ -4,7 +4,8 @@ import databases
 import sqlalchemy
 import short_url
 
-from models.url_model import UrlIn
+from models.url import UrlIn
+from models.target_url import TargetUrlIn
 
 BASE_URL = "http://localhost:8000/"
 # SQLAlchemy specific code, as with any other app
@@ -16,10 +17,20 @@ database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()
 
 url_database = sqlalchemy.Table(
-    "url_database_2",
+    "url_database",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("url", sqlalchemy.String),
+)
+
+target_url_database = sqlalchemy.Table(
+    "target_url_database",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("url", sqlalchemy.String),
+    sqlalchemy.Column("send_sms", sqlalchemy.Boolean),
+    sqlalchemy.Column("send_whatsapp", sqlalchemy.Boolean),
+    sqlalchemy.Column("send_email", sqlalchemy.Boolean),
 )
 
 engine = sqlalchemy.create_engine(
@@ -55,4 +66,17 @@ async def redirect_to_url(url_part: str):
     db_id = short_url.decode_url(url_part)
     query = url_database.select().where(url_database.c.id == db_id)
     return await database.fetch_all(query)
+
+
+@app.post("/add-target-url")
+async def shorten(url_parameter: TargetUrlIn):
+    query = url_database.insert().values(
+        url=url_parameter.url,
+        send_sms=url_parameter.send_sms,
+        send_whatsapp=url_parameter.send_whatsapp,
+        send_email=url_parameter.send_email,
+    )
+    last_record_id = await database.execute(query)
+    shorted_url = short_url.encode_url(last_record_id)
+    return {"id": last_record_id, "shortUrl": BASE_URL + shorted_url}
 
