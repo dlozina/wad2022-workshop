@@ -3,6 +3,7 @@ from fastapi import FastAPI
 import databases
 import sqlalchemy
 import short_url
+from fastapi.responses import RedirectResponse
 
 from models.url import UrlIn
 from models.target_url import TargetUrlIn
@@ -65,7 +66,10 @@ async def shorten(url_parameter: UrlIn):
 async def redirect_to_url(url_part: str):
     db_id = short_url.decode_url(url_part)
     query = url_database.select().where(url_database.c.id == db_id)
-    return await database.fetch_all(query)
+    dbEntityList = await database.fetch_all(query)
+    for dbEntity in dbEntityList:
+        result = dbEntity['url']
+    return RedirectResponse("https://" + result)
 
 
 @app.post("/add-target-url")
