@@ -3,3 +3,4 @@ databases==0.6.0
 SQLAlchemy==1.4.37
 aiosqlite==0.17.0
 short-url==1.2.2
+infobip-api-python-sdk=2.3.0

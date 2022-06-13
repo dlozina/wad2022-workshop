@@ -9,6 +9,7 @@ from fastapi.responses import RedirectResponse
 
 from models.url import UrlIn
 from models.target_url import TargetUrlIn, TargetUrl
+from communication.notify_channels import NotifyChannels
 
 BASE_URL = "http://localhost:8000/"
 # SQLAlchemy specific code, as with any other app
@@ -59,7 +60,7 @@ async def hi_attendees():
     return {"message": "Welcome to or workshop!"}
 
 
-@app.get("/get-all-target-urls")
+@app.get("/get-all-target-urls", response_model=List[TargetUrl])
 async def get_all_target_urls():
     query = target_url_table.select()
     return await database.fetch_all(query)
@@ -72,16 +73,35 @@ async def shorten(url_parameter: UrlIn):
     )
     last_record_id = await database.execute(query)
     shorted_url = short_url.encode_url(last_record_id)
-    return {"id": last_record_id, "shortUrl": BASE_URL + shorted_url}
+
+    query = target_url_table.select()
+    db_entity_list = await database.fetch_all(query)
+    for db_entity in db_entity_list:
+        if db_entity['url'] == url_parameter.url:
+            is_target_url = True
+            break
+        else:
+            is_target_url = False
+
+    return {
+        "id": last_record_id,
+        "longUrl": url_parameter.url,
+        "shortUrl": BASE_URL + shorted_url,
+        "isTargetUrl": is_target_url
+    }
 
 
 @app.get("/{url_part}")
 async def redirect_to_url(url_part: str):
     db_id = short_url.decode_url(url_part)
+
     query = url_table.select().where(url_table.c.id == db_id)
-    dbEntityList = await database.fetch_all(query)
-    for dbEntity in dbEntityList:
-        result = dbEntity['url']
+    db_entity_list = await database.fetch_all(query)
+    for db_entity in db_entity_list:
+        result = db_entity['url']
+
+    NotifyChannels().notify_sms(result)
+
     return RedirectResponse("https://" + result)
 
 
