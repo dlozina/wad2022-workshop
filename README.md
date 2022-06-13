@@ -25,4 +25,13 @@ Enable app to use various communication channels such as:
 - [Email Reference](https://www.infobip.com/docs/api#channels/email)
 
 ## 🚀 Jump start
-- pip install -r requirements/dev.txt
+### Install packages
+```bash
+pip install -r requirements/dev.txt
+```
+### Run the app
+```bash
+uvicorn main:app --reload
+```
+### Localhost address
+- http://localhost:8000
