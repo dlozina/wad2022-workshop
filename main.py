@@ -52,6 +52,11 @@ async def shutdown():
     await database.disconnect()
 
 
+@app.get("/")
+async def hi_attendees():
+    return {"message": "Welcome to or workshop!"}
+
+
 @app.post("/shorten")
 async def shorten(url_parameter: UrlIn):
     query = url_database.insert().values(
@@ -81,6 +86,5 @@ async def shorten(url_parameter: TargetUrlIn):
         send_email=url_parameter.send_email,
     )
     last_record_id = await database.execute(query)
-    shorted_url = short_url.encode_url(last_record_id)
-    return {"id": last_record_id, "shortUrl": BASE_URL + shorted_url}
+    return {"id": last_record_id, "url": url_parameter.url}
 
