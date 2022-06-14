@@ -57,7 +57,7 @@ async def shutdown():
 
 @app.get("/")
 async def hi_attendees():
-    return {"message": "Welcome to or workshop!"}
+    return {"message": "Welcome to our workshop! Thank you!"}
 
 
 @app.get("/get-all-target-urls", response_model=List[TargetUrl])
@@ -100,7 +100,7 @@ async def redirect_to_url(url_part: str):
     for db_entity in db_entity_list:
         result = db_entity['url']
 
-    NotifyChannels().notify_sms(result)
+    # NotifyChannels().notify_sms(result)
 
     return RedirectResponse("https://" + result)
 
